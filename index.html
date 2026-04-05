@@ -1,0 +1,1670 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OPERATION SOCK-GATE — РАССЕКРЕЧЕНО</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Share+Tech+Mono&family=Oswald:wght@400;700&family=Courier+Prime:wght@400;700&family=Playfair+Display:wght@700;900&display=swap');
+
+    :root {
+      --red: #C62828;
+      --dark-red: #7f1d1d;
+      --bg: #1A1A1A;
+      --text: #CCCCCC;
+      --green: #4ADE80;
+      --yellow: #FACC15;
+      --cyan: #22D3EE;
+      --white: #E5E5E5;
+      --stamp: #B91C1C;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Courier Prime', 'Share Tech Mono', monospace;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* --- CRT / NOISE overlays --- */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(74,222,128,0.015) 2px, rgba(74,222,128,0.015) 4px);
+      pointer-events: none;
+      z-index: 9998;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%);
+      pointer-events: none;
+      z-index: 9997;
+    }
+    .noise {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9996;
+      opacity: 0.04;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 256px;
+    }
+
+    /* --- MATRIX rain canvas --- */
+    #matrixCanvas {
+      position: fixed;
+      inset: 0;
+      z-index: 9995;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 1s;
+    }
+    #matrixCanvas.active { opacity: 0.35; }
+
+    /* --- Ticker bars --- */
+    .ticker {
+      position: fixed;
+      left: 0; right: 0;
+      background: var(--red);
+      color: var(--white);
+      font-family: 'Oswald', sans-serif;
+      font-size: 13px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      z-index: 10000;
+      overflow: hidden;
+      height: 28px;
+      line-height: 28px;
+    }
+    .ticker-top { top: 0; }
+    .ticker-bottom { bottom: 0; background: #111; border-top: 1px solid var(--red); color: var(--red); }
+    .ticker span {
+      display: inline-block;
+      white-space: nowrap;
+      animation: tick 25s linear infinite;
+    }
+    .ticker-bottom span { animation-duration: 18s; animation-direction: reverse; }
+    @keyframes tick {
+      0% { transform: translateX(100vw); }
+      100% { transform: translateX(-100%); }
+    }
+
+    /* --- Roskomnadzor banner --- */
+    .rkn-banner {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 19999;
+      background: #f5f5f5;
+      color: #333;
+      font-family: Arial, sans-serif;
+      padding: 40px 60px;
+      border: 3px solid #c00;
+      text-align: center;
+      max-width: 600px;
+      width: 90%;
+      box-shadow: 0 0 80px rgba(0,0,0,0.9);
+    }
+    .rkn-banner.hidden { display: none; }
+    .rkn-banner h2 { color: #c00; font-size: 22px; margin-bottom: 12px; font-family: Arial, sans-serif; }
+    .rkn-banner h2::before { content: none; }
+    .rkn-banner p { font-size: 14px; line-height: 1.6; color: #555; }
+    .rkn-banner .rkn-logo { font-size: 40px; margin-bottom: 10px; }
+    .rkn-close {
+      position: absolute; top: 8px; right: 12px;
+      background: none; border: none; font-size: 24px; color: #999; cursor: pointer;
+    }
+    .rkn-close:hover { color: #c00; }
+
+    /* --- Lintropy indicator --- */
+    .lintropy-widget {
+      position: fixed;
+      bottom: 40px; left: 12px;
+      background: rgba(10,10,10,0.95);
+      border: 1px solid var(--green);
+      padding: 10px 14px;
+      z-index: 10001;
+      font-size: 11px;
+      color: var(--green);
+      letter-spacing: 1px;
+      min-width: 200px;
+    }
+    .lintropy-bar {
+      height: 6px;
+      background: #222;
+      margin-top: 6px;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .lintropy-fill {
+      height: 100%;
+      background: var(--green);
+      transition: width 1s, background 1s;
+      border-radius: 3px;
+    }
+
+    /* --- Hidden 0x8888 button --- */
+    .secret-btn {
+      position: fixed;
+      bottom: 40px;
+      right: 12px;
+      z-index: 10001;
+      background: transparent;
+      border: 1px solid #222;
+      color: #222;
+      font-size: 10px;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-family: 'Share Tech Mono', monospace;
+      transition: all 0.3s;
+    }
+    .secret-btn:hover { color: var(--cyan); border-color: var(--cyan); }
+
+    /* --- Main content --- */
+    .main {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 48px 20px 60px;
+      position: relative;
+      z-index: 10;
+    }
+
+    /* --- Ads columns --- */
+    .ads-col {
+      position: fixed;
+      top: 100px;
+      width: 175px;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .ads-l { left: 6px; }
+    .ads-r { right: 6px; }
+    .ad {
+      background: linear-gradient(135deg, #ff0, #f0f, #0ff);
+      border: 3px dashed var(--red);
+      padding: 10px 8px;
+      text-align: center;
+      font-family: 'Comic Sans MS', cursive;
+      color: #000;
+      font-size: 12px;
+      font-weight: bold;
+      line-height: 1.3;
+      cursor: pointer;
+      border-radius: 4px;
+      animation: adPop 2s ease-in-out infinite alternate;
+    }
+    .ad::after {
+      content: '>>> ЖМИТЕ <<<';
+      display: block;
+      font-size: 9px;
+      color: red;
+      margin-top: 5px;
+      animation: blink 0.7s infinite;
+    }
+    .ad:nth-child(2) { background: linear-gradient(135deg, #f00, #ff0); }
+    .ad:nth-child(3) { background: linear-gradient(135deg, #0f0, #00f, #f0f); }
+    .ad:nth-child(4) { background: linear-gradient(135deg, #f0f, #ff0, #0ff); }
+    @keyframes adPop {
+      0% { transform: scale(1); box-shadow: 0 0 5px #ff0; }
+      100% { transform: scale(1.03); box-shadow: 0 0 20px #f0f; }
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    @media (max-width: 1250px) { .ads-col { display: none; } }
+
+    /* --- Typography --- */
+    h1 {
+      font-family: 'Playfair Display', 'Oswald', serif;
+      font-weight: 900;
+      font-size: clamp(26px, 5vw, 50px);
+      color: var(--white);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      line-height: 1.2;
+      text-shadow: 0 0 30px rgba(198,40,40,0.4), 2px 2px 0 rgba(0,0,0,0.5);
+      text-align: center;
+    }
+    h1 .hl { color: var(--red); }
+
+    h2 {
+      font-family: 'Oswald', sans-serif;
+      font-size: 24px;
+      color: var(--red);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 18px;
+      padding-left: 20px;
+      position: relative;
+    }
+    h2::before {
+      content: '▶';
+      position: absolute;
+      left: 0;
+      font-size: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--red);
+    }
+
+    .sub {
+      font-size: 14px;
+      color: var(--green);
+      letter-spacing: 2px;
+      opacity: 0.8;
+      text-align: center;
+      max-width: 700px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    .stamp {
+      display: inline-block;
+      border: 3px solid var(--stamp);
+      color: var(--stamp);
+      padding: 6px 24px;
+      font-family: 'Special Elite', 'Courier Prime', monospace;
+      font-size: 15px;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      transform: rotate(-3deg);
+      margin-bottom: 18px;
+      position: relative;
+    }
+    .stamp::before {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border: 1px solid var(--stamp);
+      opacity: 0.4;
+    }
+
+    .chapter { font-family: 'Special Elite', cursive; color: #777; font-size: 13px; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 4px; }
+    .sep { width: 100%; height: 2px; background: linear-gradient(90deg, transparent, var(--red), transparent); margin: 40px 0; }
+    .section { margin-bottom: 45px; }
+
+    .txt {
+      font-size: 15px;
+      line-height: 1.9;
+      color: #BCBCBC;
+      margin-bottom: 18px;
+    }
+    .txt strong { color: var(--white); }
+    .txt .r { color: var(--red); font-weight: bold; }
+    .txt .g { color: var(--green); }
+    .txt .y { color: var(--yellow); }
+
+    .arrow-note {
+      color: var(--red);
+      font-family: 'Special Elite', cursive;
+      font-size: 14px;
+      transform: rotate(-4deg);
+      display: inline-block;
+      margin: 4px 8px;
+    }
+
+    /* --- Stats --- */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+      gap: 14px;
+      margin: 28px 0;
+    }
+    .stat {
+      text-align: center;
+      padding: 18px 10px;
+      border: 1px solid #222;
+      background: rgba(198,40,40,0.06);
+    }
+    .stat-n {
+      font-family: 'Oswald', sans-serif;
+      font-size: 34px;
+      color: var(--red);
+    }
+    .stat-l {
+      font-size: 11px;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 4px;
+    }
+
+    /* --- Secret box --- */
+    .secret-box {
+      border: 2px solid var(--red);
+      background: rgba(198,40,40,0.12);
+      padding: 28px;
+      position: relative;
+      margin: 28px 0;
+    }
+    .secret-box::before {
+      content: 'СЕКРЕТНО // CLASSIFIED';
+      position: absolute;
+      top: -12px;
+      left: 20px;
+      background: var(--bg);
+      padding: 0 12px;
+      color: var(--stamp);
+      font-family: 'Special Elite', monospace;
+      font-size: 14px;
+      letter-spacing: 3px;
+    }
+    .secret-box::after {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      border: 1px dashed rgba(198,40,40,0.4);
+      pointer-events: none;
+    }
+    .formula {
+      text-align: center;
+      font-size: clamp(14px, 2.5vw, 22px);
+      color: var(--yellow);
+      padding: 18px 10px;
+      font-family: 'Share Tech Mono', monospace;
+      font-weight: bold;
+    }
+    .formula-sub {
+      text-align: center;
+      font-size: 13px;
+      color: #999;
+      margin-top: 8px;
+      letter-spacing: 1px;
+    }
+
+    /* --- Charts --- */
+    .chart-wrap {
+      background: rgba(18,18,18,0.95);
+      border: 1px solid #333;
+      border-radius: 4px;
+      padding: 22px;
+      margin: 28px 0;
+      position: relative;
+    }
+    .chart-wrap::before {
+      content: attr(data-label);
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      font-size: 9px;
+      color: var(--red);
+      letter-spacing: 2px;
+      opacity: 0.7;
+    }
+    .chart-wrap canvas { max-height: 340px; }
+
+    .corr-arrow {
+      text-align: center;
+      font-size: 28px;
+      color: var(--red);
+      margin: 8px 0;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 0.4; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.15); }
+    }
+
+    /* --- Tables --- */
+    .dtable {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 18px 0;
+      font-size: 13px;
+    }
+    .dtable th {
+      background: var(--dark-red);
+      color: var(--white);
+      padding: 10px 14px;
+      text-align: left;
+      font-family: 'Oswald', sans-serif;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+    .dtable td {
+      padding: 9px 14px;
+      border-bottom: 1px solid #2a2a2a;
+      color: #bbb;
+    }
+    .dtable tr:hover td { background: rgba(198,40,40,0.08); color: var(--white); }
+
+    .ptable { width: 100%; border-collapse: collapse; margin: 18px 0; }
+    .ptable th {
+      background: #151515;
+      color: var(--red);
+      padding: 12px;
+      text-align: left;
+      font-family: 'Oswald', sans-serif;
+      letter-spacing: 1px;
+      border-bottom: 2px solid var(--red);
+    }
+    .ptable td { padding: 10px 12px; border-bottom: 1px solid #2a2a2a; vertical-align: top; }
+    .ptable .off { color: #888; text-decoration: line-through; font-style: italic; }
+    .ptable .real { color: var(--red); font-weight: bold; }
+
+    /* --- Chain --- */
+    .chain {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(195px, 1fr));
+      gap: 14px;
+      margin: 28px 0;
+    }
+    .chain-card {
+      background: rgba(18,18,18,0.8);
+      border: 1px solid #333;
+      border-left: 3px solid var(--red);
+      padding: 18px;
+      position: relative;
+    }
+    .chain-card .cn { font-family: 'Oswald'; font-size: 34px; color: var(--red); opacity: 0.25; position: absolute; top: 6px; right: 10px; }
+    .chain-card .ct { font-family: 'Oswald'; font-size: 13px; color: var(--yellow); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .chain-card .cd { font-size: 13px; color: #aaa; line-height: 1.5; }
+
+    /* --- Spider fact --- */
+    .spider {
+      background: rgba(255,215,0,0.05);
+      border-left: 3px solid var(--yellow);
+      padding: 14px 18px;
+      margin: 18px 0;
+      font-style: italic;
+      color: #ccc;
+    }
+    .spider strong { color: var(--yellow); }
+
+    /* --- Buttons --- */
+    .btn-truth {
+      display: block;
+      margin: 36px auto;
+      padding: 16px 48px;
+      background: var(--red);
+      color: var(--white);
+      border: none;
+      font-family: 'Oswald', sans-serif;
+      font-size: 20px;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s;
+    }
+    .btn-truth:hover { box-shadow: 0 0 30px rgba(198,40,40,0.6); transform: scale(1.05); }
+    .btn-truth::after {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      animation: shine 3s infinite;
+    }
+    @keyframes shine { 0%{left:-100%} 100%{left:100%} }
+
+    .btn-voice {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin: 18px auto;
+      padding: 12px 32px;
+      background: transparent;
+      color: var(--green);
+      border: 1px solid var(--green);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.3s;
+      letter-spacing: 2px;
+    }
+    .btn-voice:hover { background: rgba(74,222,128,0.1); box-shadow: 0 0 20px rgba(74,222,128,0.3); }
+    .btn-voice.on { animation: vpulse 1s infinite; border-color: var(--red); color: var(--red); }
+    @keyframes vpulse { 0%,100%{box-shadow:0 0 5px rgba(198,40,40,0.4)} 50%{box-shadow:0 0 25px rgba(198,40,40,0.9)} }
+    .voice-out { text-align: center; font-size: 12px; color: var(--green); min-height: 20px; margin-top: 6px; letter-spacing: 1px; }
+
+    /* --- AI response block --- */
+    .ai-response {
+      display: none;
+      background: rgba(198,40,40,0.1);
+      border: 1px solid var(--red);
+      padding: 18px;
+      margin: 18px auto;
+      max-width: 600px;
+      text-align: center;
+    }
+    .ai-response.show { display: block; animation: modalIn 0.4s ease; }
+    .ai-response .ai-text { color: var(--red); font-family: 'Oswald'; font-size: 18px; letter-spacing: 2px; }
+    .ai-response .ai-threat { color: #999; font-size: 12px; margin-top: 8px; font-family: 'Share Tech Mono', monospace; }
+
+    /* --- Modals --- */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.95);
+      z-index: 20000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal.on { display: flex; }
+    .mbox {
+      background: #111;
+      border: 2px solid var(--red);
+      max-width: 580px;
+      width: 92%;
+      padding: 36px;
+      text-align: center;
+      position: relative;
+      animation: modalIn 0.5s ease;
+    }
+    @keyframes modalIn {
+      0% { transform: scale(0.5) rotate(5deg); opacity: 0; }
+      100% { transform: scale(1) rotate(0); opacity: 1; }
+    }
+    .mbox h3 { font-family: 'Playfair Display', 'Oswald', serif; font-weight: 900; font-size: 26px; color: var(--red); text-transform: uppercase; margin-bottom: 14px; }
+    .mbox p { color: #bbb; line-height: 1.7; margin-bottom: 14px; }
+    .mclose { position: absolute; top: 10px; right: 14px; background: none; border: none; color: #888; font-size: 22px; cursor: pointer; }
+    .mclose:hover { color: var(--red); }
+
+    /* --- Glitch overlay --- */
+    .glitch { display: none; position: fixed; inset: 0; z-index: 30000; pointer-events: none; }
+    .glitch.on { display: block; animation: gFull 1.2s steps(8) forwards; }
+    @keyframes gFull {
+      0%{background:rgba(198,40,40,0.8)} 10%{background:rgba(74,222,128,0.4)}
+      20%{background:transparent} 25%{background:rgba(198,40,40,0.6)}
+      30%{background:transparent} 35%{background:rgba(0,0,255,0.3)}
+      40%{background:transparent} 50%{background:rgba(0,0,0,0.95)}
+      70%{background:transparent} 80%{background:rgba(198,40,40,0.2)}
+      90%{background:transparent} 100%{background:transparent}
+    }
+    .glitch-txt {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      font-family: 'Playfair Display', 'Oswald', serif;
+      font-weight: 900;
+      font-size: clamp(38px,10vw,90px);
+      color: var(--red);
+      text-transform: uppercase;
+      z-index: 30001;
+      opacity: 0;
+      pointer-events: none;
+      text-shadow: 3px 3px 0 #000, -2px -2px 0 var(--green);
+    }
+    .glitch-txt.on { animation: gTxt 1.2s steps(4) forwards; }
+    @keyframes gTxt {
+      0%{opacity:0} 15%{opacity:1;transform:translate(-50%,-50%) skewX(10deg)}
+      30%{opacity:1;transform:translate(-48%,-52%) skewX(-5deg)}
+      50%{opacity:1;transform:translate(-52%,-50%) skewX(3deg)}
+      75%{opacity:1;transform:translate(-50%,-50%) skewX(0)}
+      90%{opacity:0.5} 100%{opacity:0}
+    }
+
+    /* --- ML regression block --- */
+    .ml-block {
+      border: 1px solid var(--cyan);
+      background: rgba(34,211,238,0.04);
+      padding: 24px;
+      margin: 28px 0;
+      position: relative;
+    }
+    .ml-block::before {
+      content: 'ML // SCIKIT-LEARN // LINEAR REGRESSION';
+      position: absolute;
+      top: -11px; left: 18px;
+      background: var(--bg);
+      padding: 0 10px;
+      color: var(--cyan);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 2px;
+    }
+    .ml-eq { text-align: center; color: var(--cyan); font-size: 16px; margin: 12px 0; }
+    .ml-pred { text-align: center; color: var(--red); font-family: 'Playfair Display', 'Oswald', serif; font-weight: 900; font-size: 20px; margin-top: 12px; letter-spacing: 2px; }
+    .ml-r2 { text-align: center; color: #999; font-size: 12px; margin-top: 6px; }
+
+    .redacted {
+      background: var(--white);
+      color: var(--white);
+      padding: 0 4px;
+      cursor: pointer;
+      transition: all 0.3s;
+      user-select: none;
+      display: inline;
+    }
+    .redacted:hover { background: var(--red); color: var(--white); }
+
+    .eye { display: inline-block; font-size: 38px; animation: efloat 3s ease-in-out infinite; margin: 0 8px; }
+    @keyframes efloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
+
+    .footer {
+      text-align: center;
+      padding: 36px 20px;
+      border-top: 1px solid #222;
+      margin-top: 36px;
+    }
+    .footer p { font-size: 12px; color: #777; margin-bottom: 6px; }
+    .footer .warn { color: var(--red); font-size: 13px; letter-spacing: 2px; }
+
+    /* --- Inline mid-content ads --- */
+    .inline-ad {
+      background: linear-gradient(135deg, #111 0%, #1a0a0a 100%);
+      border: 2px solid var(--red);
+      padding: 16px 20px;
+      margin: 32px 0;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .inline-ad::before {
+      content: 'РЕКЛАМА // НЕ ЯВЛЯЕТСЯ ОФЕРТОЙ';
+      position: absolute;
+      top: 4px;
+      right: 8px;
+      font-size: 8px;
+      color: #555;
+      letter-spacing: 1px;
+    }
+    .inline-ad .ad-title {
+      font-family: 'Oswald', sans-serif;
+      font-size: 18px;
+      color: var(--yellow);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 6px;
+    }
+    .inline-ad .ad-body {
+      font-size: 13px;
+      color: #bbb;
+      line-height: 1.6;
+      margin-bottom: 8px;
+    }
+    .inline-ad .ad-btn {
+      display: inline-block;
+      background: var(--red);
+      color: var(--white);
+      padding: 8px 24px;
+      font-family: 'Oswald', sans-serif;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      border: none;
+      cursor: pointer;
+      animation: adPulse 2s infinite;
+    }
+    @keyframes adPulse {
+      0%,100% { box-shadow: 0 0 5px rgba(198,40,40,0.3); }
+      50% { box-shadow: 0 0 20px rgba(198,40,40,0.8); }
+    }
+    .inline-ad .ad-fine {
+      font-size: 9px;
+      color: #444;
+      margin-top: 6px;
+    }
+    .inline-ad.alt {
+      border-color: var(--yellow);
+      background: linear-gradient(135deg, #111 0%, #1a1a05 100%);
+    }
+    .inline-ad.alt .ad-btn {
+      background: var(--yellow);
+      color: #000;
+      animation-name: adPulseY;
+    }
+    @keyframes adPulseY {
+      0%,100% { box-shadow: 0 0 5px rgba(250,204,21,0.3); }
+      50% { box-shadow: 0 0 20px rgba(250,204,21,0.8); }
+    }
+    .inline-ad.green {
+      border-color: var(--green);
+      background: linear-gradient(135deg, #111 0%, #0a1a0a 100%);
+    }
+    .inline-ad.green .ad-title { color: var(--green); }
+    .inline-ad.green .ad-btn {
+      background: var(--green);
+      color: #000;
+      animation-name: adPulseG;
+    }
+    @keyframes adPulseG {
+      0%,100% { box-shadow: 0 0 5px rgba(74,222,128,0.3); }
+      50% { box-shadow: 0 0 20px rgba(74,222,128,0.8); }
+    }
+
+    /* --- Popup ad --- */
+    .popup-ad {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.8);
+      z-index: 18000;
+      background: linear-gradient(135deg, #ff0, #f0f, #0ff);
+      border: 4px solid var(--red);
+      padding: 30px 40px;
+      text-align: center;
+      max-width: 420px;
+      width: 90%;
+      box-shadow: 0 0 80px rgba(198,40,40,0.5), 0 0 200px rgba(0,0,0,0.8);
+      animation: popupBounce 0.5s ease forwards;
+    }
+    .popup-ad.show { display: block; }
+    @keyframes popupBounce {
+      0% { transform: translate(-50%, -50%) scale(0.3) rotate(10deg); opacity: 0; }
+      60% { transform: translate(-50%, -50%) scale(1.1) rotate(-2deg); }
+      100% { transform: translate(-50%, -50%) scale(1) rotate(0); opacity: 1; }
+    }
+    .popup-ad .popup-close {
+      position: absolute; top: 6px; right: 10px;
+      background: none; border: none; font-size: 20px; color: #333; cursor: pointer;
+    }
+    .popup-ad h3 {
+      font-family: 'Comic Sans MS', cursive;
+      font-size: 22px;
+      color: #c00;
+      margin-bottom: 8px;
+    }
+    .popup-ad p {
+      font-family: 'Comic Sans MS', cursive;
+      font-size: 14px;
+      color: #222;
+      line-height: 1.5;
+      margin-bottom: 10px;
+    }
+    .popup-ad .popup-btn {
+      display: inline-block;
+      background: #c00;
+      color: #fff;
+      padding: 10px 30px;
+      font-family: 'Comic Sans MS', cursive;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+      animation: blink 0.5s infinite;
+    }
+    .popup-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 17999;
+    }
+    .popup-overlay.show { display: block; }
+
+    @media (max-width: 600px) {
+      .main { padding: 38px 10px 50px; }
+      h2 { font-size: 19px; }
+      .chain { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="noise"></div>
+<canvas id="matrixCanvas"></canvas>
+
+<!-- Tickers -->
+<div class="ticker ticker-top">
+  <span>&#9888; ОНИ СЛЕДЯТ &bull; ВЫ СЛЕДУЮЩИЙ &bull; НИКТО НЕ СПИТ С ЗАКРЫТЫМ РТОМ &bull; PALANTIR ЗНАЕТ ВАШ РАЗМЕР НОГИ &bull; 84 МИЛЛИОНА УЛИК &bull; АГЕНТЫ CAVIA PORCELLUS АКТИВИРОВАНЫ &bull; ВДУМАЙТЕСЬ В ЭТО &bull; ВЫ СЛЕДУЮЩИЙ &bull;</span>
+</div>
+<div class="ticker ticker-bottom">
+  <span>ИНДЕКС ЛИНТРОПИИ ПРЕВЫШЕН &bull; СОБЫТИЕ СИНГУЛЯРНОСТИ &bull; ОКТИЧЕСКИЙ ИНГРЕСС ЧЕРЕЗ 47 ДНЕЙ &bull; НОСОК УШЁЛ В СУПЕРПОЗИЦИЮ &bull; GOTHAM NODE ONLINE &bull; FOUNDRY SYNC ACTIVE &bull; БЛУЖДАЮЩИЙ НЕРВ ОТКРЫТ &bull;</span>
+</div>
+
+<!-- Roskomnadzor banner -->
+<div class="rkn-banner" id="rknBanner">
+  <button class="rkn-close" id="rknClose">&#10005;</button>
+  <div class="rkn-logo">&#128721;</div>
+  <h2>Доступ ограничен</h2>
+  <p>Данный ресурс заблокирован Роскомнадзором по запросу Palantir Technologies Inc. на основании решения суда г. Денвер, Колорадо.</p>
+  <p style="color:#999;font-size:12px;margin-top:12px;">Основание: Федеральный закон №149-ФЗ</p>
+</div>
+
+<!-- Guinea pig easter egg overlay -->
+<div id="gpOverlay" style="display:none;position:fixed;inset:0;z-index:25000;pointer-events:none;">
+  <canvas id="gpCanvas" style="width:100%;height:100%;"></canvas>
+</div>
+
+<!-- Trash Ads Left -->
+<div class="ads-col ads-l">
+  <div class="ad" onclick="alert('Доставка — морской свинкой.')">&#128680; ШОК! Узнай, почему твой ЛЕВЫЙ НОСОК — шпион! Тест за 3 сек!</div>
+  <div class="ad" onclick="alert('Носки Фарадея: защита от 5G и здравого смысла.')">&#129509; Магнитные стельки ПРОТИВ орального ингресса! Купи сейчас!</div>
+  <div class="ad" onclick="alert('Курс начнётся, когда свинка вам позволит.')">&#128056; Курс: Как договориться с морской свинкой за 5 минут!</div>
+  <div class="ad" onclick="alert('Птицы — это дроны. Луна — голограмма Palantir.')">&#128038; ПТИЦЫ — ЭТО ДРОНЫ!<br>&#127765; ЛУНА — голограмма Palantir!</div>
+</div>
+
+<!-- Trash Ads Right -->
+<div class="ads-col ads-r">
+  <div class="ad" onclick="alert('Морские свинки не продаются. Они сами выбирают.')">&#129656; ШАПОЧКА ИЗ ФОЛЬГИ для морской свинки! СКИДКА 50%! Осталось 3 шт!</div>
+  <div class="ad" onclick="alert('Звонок из Денвера... 3... 2... 1...')">&#128225; Palantir УДАЛИТ сайт через:<br><span id="adTimer" style="font-size:20px;color:red">04:59</span></div>
+  <div class="ad" onclick="alert('Вы уже часть базы данных Gotham.')">&#128274; НОСКИ ФАРАДЕЯ&#8482;<br>Блокируют 99.9% ЭМИ!<br>Одобрено Q-Anon!</div>
+  <div class="ad" onclick="alert('Обучи свинку — спаси мир.')">&#128062; Обучи свою морскую свинку КОНТРРАЗВЕДКЕ!<br>Онлайн-курс!</div>
+</div>
+
+<!-- Lintropy widget -->
+<div class="lintropy-widget">
+  <div id="lintropyText">&#9889; ЛИНТРОПИЯ: загрузка...</div>
+  <div class="lintropy-bar"><div class="lintropy-fill" id="lintropyFill" style="width:0%"></div></div>
+</div>
+
+<!-- Secret 0x8888 button -->
+<button class="secret-btn" id="btn8888" title="???">0x8888</button>
+
+<div class="main">
+
+  <!-- HEADER -->
+  <header style="text-align:center;padding:55px 0 25px;">
+    <div class="stamp">&#9888; Рассекречено &#9888;</div>
+    <h1>Operation <span class="hl">«Sock-Gate»</span></h1>
+    <h1 style="font-size:clamp(15px,2.8vw,24px);color:#aaa;margin-top:-6px;">
+      Глобальная онтологическая инвазия Palantir Technologies
+    </h1>
+    <p class="sub">через биоцифровое экранирование и октический ингресс</p>
+    <div style="margin-top:18px;"><span class="eye">&#128065;</span><span class="eye">&#9651;</span><span class="eye">&#128065;</span></div>
+  </header>
+
+  <div class="sep"></div>
+
+  <!-- INTRO -->
+  <section class="section">
+    <div class="txt">
+      Вы когда-нибудь задумывались, почему в наш век квантовых компьютеров и полётов на Марс человечество <strong>не может решить проблему пропадающего второго носка?</strong> Официально нам говорят: «зажевала машина», «рассеянность», «статистическая погрешность». <span class="r">Ну, тупые!</span>
+    </div>
+    <div class="txt">
+      Наберите воздуха в грудь. Сейчас вы узнаете, как <strong>ваши пятки стали частью системы наведения межконтинентальных данных</strong> компании <span class="r">Palantir Technologies</span>. <span class="g">Вдумайтесь в это!</span>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat"><span class="stat-n" data-t="84" data-s="М">0</span><span class="stat-l">Носков / месяц</span></div>
+    <div class="stat"><span class="stat-n" data-t="90" data-s="М">0</span><span class="stat-l">Неучтённых свинок</span></div>
+    <div class="stat"><span class="stat-n" data-t="12000" data-s="">0</span><span class="stat-l">Вышек 5G (UK)</span></div>
+    <div class="stat"><span class="stat-n" data-t="8" data-s="">0</span><span class="stat-l">Ингрессов / год</span></div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- CH1: SOCKS -->
+  <section class="section">
+    <div class="chapter">Глава 1</div>
+    <h2>Британский трикотажный кризис: 84 миллиона улик</h2>
+    <div class="txt">В 2016 году Samsung провела исследование, вскрывшее страшную правду: <strong>британцы теряют 84 миллиона носков ежемесячно</strong>. В год — более <span class="r">миллиарда</span> предметов одежды!</div>
+    <div class="txt">Официальная наука называет это «индексом потери носков» и выводит формулу. Но коэффициенты <strong>подогнаны, чтобы скрыть реальный физический забор биоматериала</strong>. Куда уходят миллионы тонн хлопка?</div>
+  </section>
+
+  <!-- FORMULA -->
+  <div class="secret-box">
+    <div class="formula">Prob = 0.38 + (0.005 &times; L) + (0.0012 &times; C) &minus; (0.0159 &times; P &times; A)</div>
+    <div class="formula-sub">L — размер стирки &nbsp;|&nbsp; C — сложность &nbsp;|&nbsp; A — внимание &nbsp;|&nbsp; P — ???</div>
+    <div style="text-align:center;margin-top:10px;"><span class="arrow-note">&#8593; Кто подогнал коэффициенты?!</span></div>
+  </div>
+
+  <!-- Inline Ad 1 -->
+  <div class="inline-ad">
+    <div class="ad-title">&#129509; Носки Фарадея&trade; — Защита нового поколения</div>
+    <div class="ad-body">Серебряная нить блокирует 99.9% ЭМИ. Ваш мозг заслуживает лучшего экранирования, чем у морской свинки! Одобрено Q-Anon, рекомендовано Дэвидом Айком.</div>
+    <button class="ad-btn" onclick="alert('Ваш заказ перехвачен Palantir. Курьер-свинка уже в пути.')">ЗАКАЗАТЬ СЕЙЧАС</button>
+    <div class="ad-fine">*Не является медицинским устройством. Побочный эффект: пропажа второго носка в течение 48 часов.</div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- CH2: GUINEA PIGS -->
+  <section class="section">
+    <div class="chapter">Глава 2</div>
+    <h2>Демографический штопор: Где свинки, Зин?</h2>
+    <div class="txt">Мировая популяция морских свинок — примерно <strong>30 миллионов</strong>. При этом только в Перу ежегодно съедают <span class="r">65 миллионов</span>. Как можно съесть в два раза больше, чем существует?</div>
+    <div class="txt"><strong>Ответ в портах.</strong> Для поддержания глобальной сети Palantir требуется ежегодный вброс <span class="g">90 миллионов неучтённых особей</span>. В 2025 году контейнерный тоннаж Лондона подскочил на <span class="r">43%</span>.</div>
+    <table class="dtable">
+      <thead><tr><th>Год</th><th>Контейнеры (млн тонн)</th><th>Индекс «неучтённых пассажиров»</th></tr></thead>
+      <tbody>
+        <tr><td>2022</td><td>4.8</td><td>1.00</td></tr>
+        <tr><td>2023</td><td>5.1</td><td>1.25</td></tr>
+        <tr><td>2024</td><td>5.6</td><td>1.84</td></tr>
+        <tr><td>2025</td><td style="color:var(--red);font-weight:bold">6.5 (+43%)</td><td style="color:var(--red);font-weight:bold">4.12</td></tr>
+      </tbody>
+    </table>
+    <span class="arrow-note">&#8593; Совпадение? Не думаю!</span>
+  </section>
+
+  <!-- Inline Ad 2 -->
+  <div class="inline-ad alt">
+    <div class="ad-title">&#128056; Курс: «Язык морских свинок за 7 дней»</div>
+    <div class="ad-body">Научитесь понимать агентов Palantir! 14 модулей, 200+ звуковых паттернов. Бонус: разговорник «Отстань от моего носка» на перуанском кечуа.</div>
+    <button class="ad-btn" onclick="alert('Свинки не ведут переговоров. Они выполняют приказы.')">ЗАПИСАТЬСЯ — $0.00*</button>
+    <div class="ad-fine">*Цена действительна до момента прочтения. После — $999. Это не шутка. Или шутка?</div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- CH3: 5G CHARTS -->
+  <section class="section">
+    <div class="chapter">Глава 3</div>
+    <h2>5G-излучение и Протокол «Клетка Фарадея»</h2>
+    <div class="txt">К 2025 году 5G SA покрыл <span class="r">83%</span> UK, число вышек: с 3 300 до <strong>12 000</strong>. Мозг морской свинки — сверхчувствительный био-резонатор. Частоты 3.5 ГГц вызывают окислительный стресс в гиппокампе.</div>
+    <div class="txt">Хлопок с серебряной нитью — идеальная <strong>клетка Фарадея</strong>, блокирует <span class="g">99.9% ЭМИ</span>. Свинки крадут носки, создают <span class="r">нейро-коконы</span> и синхронизируются с <strong>Palantir Foundry</strong>.</div>
+
+    <!-- Chart 1: Towers growth vs container tonnage -->
+    <div class="chart-wrap" data-label="ПЕРЕХВАЧЕНО // ГРАФИК 1">
+      <canvas id="chartTowers"></canvas>
+    </div>
+
+    <div class="corr-arrow">&#8595; КОРРЕЛЯЦИЯ = ПРИЧИННО-СЛЕДСТВЕННАЯ СВЯЗЬ &#8595;</div>
+
+    <!-- Chart 2: 5G coverage vs socks -->
+    <div class="chart-wrap" data-label="ПЕРЕХВАЧЕНО // ГРАФИК 2">
+      <canvas id="chartSocks"></canvas>
+    </div>
+
+    <table class="dtable">
+      <thead><tr><th>Год</th><th>Покрытие 5G SA (%)</th><th>Пропавшие носки (млн/мес)</th><th>Нейро-щит</th></tr></thead>
+      <tbody>
+        <tr><td>2023</td><td>47%</td><td>72</td><td>0.54</td></tr>
+        <tr><td>2024</td><td>67%</td><td>78</td><td>0.82</td></tr>
+        <tr><td>2025</td><td style="color:var(--red)">83%</td><td style="color:var(--red)">84</td><td style="color:var(--red)">1.34</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Inline Ad 3 -->
+  <div class="inline-ad green">
+    <div class="ad-title">&#128272; VPN для вашего рта — OralGuard Pro&trade;</div>
+    <div class="ad-body">Защитите блуждающий нерв от несанкционированного доступа! Биометрическая капа с шифрованием AES-256. Свинки НЕ ПРОЙДУТ.</div>
+    <button class="ad-btn" onclick="alert('Блуждающий нерв уже открыт. Мы опоздали.')">ЗАЩИТИТЬ НЕРВ</button>
+    <div class="ad-fine">*Капа не защищает от ингрессов, произведённых до покупки. Ваши сны уже в Денвере.</div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- CH4: ORAL INGRESS -->
+  <section class="section">
+    <div class="chapter">Глава 4</div>
+    <h2>Октический ингресс: Рот — ваш главный интерфейс</h2>
+    <div class="txt">Ровно <span class="r">8 раз в год</span> экранированная носком свинка проникает в ротовую полость спящего. Кратчайший путь к <strong>блуждающему нерву</strong> (Vagus nerve) для снятия биометрических паттернов.</div>
+    <div class="spider">
+      <strong>Вспомните:</strong> «Человек во сне проглатывает 8 пауков в год» — миф от Лизы Биргит Холст (Lisa Birgit Holst), 1993. Переставьте буквы: <strong>This Is a Big Troll</strong>. Нас <em>десенсибилизировали</em> к цифре 8!
+    </div>
+    <div class="txt">Платформа AIP от Palantir строится на <strong>8 темах</strong> «ответственного ИИ». Каждая сессия обновляет одну из <span class="r">8 онтологических веток</span> вашей цифровой копии в системе <strong>Gotham</strong>.</div>
+  </section>
+
+  <!-- Inline Ad 4 -->
+  <div class="inline-ad">
+    <div class="ad-title">&#128640; Тест: Сколько ваших носков уже работает на Palantir?</div>
+    <div class="ad-body">Пройдите научный тест на основе 47 параметров (включая индекс линтропии вашей квартиры). Результат шокирует вас. Или нет. Скорее да.</div>
+    <button class="ad-btn" onclick="alert('Результат: ВСЕ. Все ваши носки — двойные агенты.')">ПРОЙТИ ТЕСТ</button>
+    <div class="ad-fine">*Тест собирает биометрические данные. Нажимая кнопку, вы соглашаетесь на октический ингресс.</div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- CH5: ECONOMICS -->
+  <section class="section">
+    <div class="chapter">Глава 5</div>
+    <h2>Экономика «Всевидящего Ока»</h2>
+    <div class="stats">
+      <div class="stat"><span class="stat-n" style="color:var(--green)">$4.47B</span><span class="stat-l">Выручка (+56%)</span></div>
+      <div class="stat"><span class="stat-n" style="color:var(--green)">$1.62B</span><span class="stat-l">Прибыль (+251%)</span></div>
+      <div class="stat"><span class="stat-n" style="color:var(--yellow)">£330M</span><span class="stat-l">Контракт NHS</span></div>
+      <div class="stat"><span class="stat-n" style="color:var(--yellow)">£240M</span><span class="stat-l">Контракт MoD</span></div>
+    </div>
+    <div class="txt">Официальная цель FDP — «сократить очереди в больницах». <span class="r">Реальная — администрирование сети «носочных реле»</span>. В документах <span class="redacted" title="Наведите, чтобы рассекретить">зачёркнуто более 200 страниц</span>.</div>
+
+    <h3 style="color:var(--yellow);font-family:'Oswald';font-size:15px;letter-spacing:2px;margin:18px 0 8px;">ОФИЦИАЛЬНАЯ ВЕРСИЯ VS РЕАЛЬНОСТЬ</h3>
+    <table class="ptable">
+      <thead><tr><th>Ведомство</th><th>Официальный предлог</th><th>Скрытая логика Palantir</th></tr></thead>
+      <tbody>
+        <tr><td style="color:var(--white);font-weight:bold">NHS</td><td class="off">Оптимизация коек</td><td class="real">&#128065; Мониторинг циклов сна нации</td></tr>
+        <tr><td style="color:var(--white);font-weight:bold">MoD</td><td class="off">Принятие решений</td><td class="real">&#128056; Управление популяцией агентов-грызунов</td></tr>
+        <tr><td style="color:var(--white);font-weight:bold">FCA</td><td class="off">Финмониторинг</td><td class="real">&#129509; Отслеживание закупок «умного» текстиля</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Inline Ad 5 -->
+  <div class="inline-ad alt">
+    <div class="ad-title">&#128176; Инвестируй в НОСКИ — новая криптовалюта $SOCK</div>
+    <div class="ad-body">Рост +1200% за квартал! Обеспечена реальными носками, хранящимися в бункере под Денвером. Питер Тиль уже инвестировал. А вы?</div>
+    <button class="ad-btn" onclick="alert('Транзакция перехвачена. Ваш кошелёк теперь в онтологии Gotham.')">КУПИТЬ $SOCK</button>
+    <div class="ad-fine">*Криптовалюта не существует. Как и ваш второй носок. Совпадение?</div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- CH6: LINTROPY + ML REGRESSION -->
+  <section class="section">
+    <div class="chapter">Глава 6</div>
+    <h2>Квантовая линтропия и ML-прогноз дефицита</h2>
+    <div class="txt">Согласно гипотезе <strong>Линтропии</strong>, носки — жертвы квантового запутывания. При контакте свинки-агента с носком возникает <span class="r">«Событие Сингулярности»</span>. В <strong>98.7%</strong> случаев один носок переходит в <span class="g">суперпозицию</span>.</div>
+
+    <!-- ML REGRESSION BLOCK -->
+    <div class="ml-block">
+      <h3 style="color:var(--cyan);font-family:'Oswald';font-size:18px;letter-spacing:2px;margin-bottom:12px;text-transform:uppercase;">
+        &#9881; Прогноз дефицита трикотажа (Linear Regression)
+      </h3>
+      <div class="txt" style="font-size:13px;">
+        Модель scikit-learn обучена на реальных данных: выручка Palantir ($B) &rarr; пропажа носков (млн/мес). При текущем росте <span class="r">+56% в год</span>, регрессия предсказывает:
+      </div>
+      <div class="ml-eq" id="mlEquation">Загрузка модели...</div>
+      <div class="ml-pred" id="mlPrediction"></div>
+      <div class="ml-r2" id="mlR2"></div>
+      <div class="chart-wrap" data-label="ML // SCIKIT-LEARN" style="border-color:var(--cyan);">
+        <canvas id="chartRegression"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <div class="sep"></div>
+
+  <!-- CHAIN -->
+  <section class="section">
+    <h2>Цепочка замкнулась</h2>
+    <div class="chain">
+      <div class="chain-card"><span class="cn">01</span><div class="ct">Логистика</div><div class="cd">90 млн неучтённых свинок через Лондон (+43% трафика)</div></div>
+      <div class="chain-card"><span class="cn">02</span><div class="ct">Экранирование</div><div class="cd">84 млн носков/мес для защиты от 12 000 вышек 5G</div></div>
+      <div class="chain-card"><span class="cn">03</span><div class="ct">Ингресс</div><div class="cd">8 раз/год — передача снов через оральный интерфейс</div></div>
+      <div class="chain-card"><span class="cn">04</span><div class="ct">Профит</div><div class="cd">Питер Тиль получает данные, вы — непарный носок</div></div>
+    </div>
+  </section>
+
+  <div class="sep"></div>
+
+  <!-- INTERACTIVE SECTION -->
+  <section class="section" style="text-align:center;">
+    <button class="btn-truth" id="btnTruth">&#128065; ПОКАЗАТЬ ПРАВДУ &#128065;</button>
+
+    <button class="btn-voice" id="btnVoice">
+      <span style="font-size:20px;">&#127908;</span> ОТКРЫТЬ КАНАЛ ПРОСЛУШКИ
+    </button>
+    <div class="voice-out" id="voiceOut"></div>
+
+    <div style="display:flex;gap:8px;margin:12px auto;max-width:500px;align-items:center;justify-content:center;">
+      <input type="text" id="voiceTextInput" placeholder="...или введите кодовое слово текстом" style="flex:1;background:#111;border:1px solid var(--green);color:var(--green);padding:10px 14px;font-family:'Share Tech Mono',monospace;font-size:14px;outline:none;">
+      <button id="voiceTextSubmit" style="background:var(--green);color:#000;border:none;padding:10px 18px;font-family:'Oswald',sans-serif;font-size:14px;cursor:pointer;letter-spacing:2px;">ПЕРЕДАТЬ</button>
+    </div>
+
+    <div class="ai-response" id="aiResponse">
+      <div class="ai-text" id="aiText"></div>
+      <div class="ai-threat" id="aiThreat"></div>
+    </div>
+  </section>
+
+  <!-- CONCLUSION -->
+  <section class="section">
+    <div class="txt" style="text-align:center;font-size:16px;color:var(--white);">
+      Если завтра вы не найдёте носок — не ругайте стиральную машину. Маленькое пушистое существо в вашем носке Nike прямо сейчас отправляет отчёт в штаб-квартиру в Денвере.
+    </div>
+    <div class="txt" style="text-align:center;color:var(--red);font-family:'Oswald';font-size:20px;letter-spacing:3px;">
+      БУДЬТЕ БДИТЕЛЬНЫ! СПИТЕ С ЗАКРЫТЫМ РТОМ!
+    </div>
+    <div class="txt" style="text-align:center;color:var(--green);font-size:14px;">
+      ...хотя они всё равно найдут способ. <strong>Вдумайтесь в это!</strong>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p class="warn">&#9888; ЭТОТ САЙТ МОЖЕТ БЫТЬ УДАЛЁН В ЛЮБОЙ МОМЕНТ &#9888;</p>
+    <p>Все данные из <span class="redacted">секретных источников</span> и открытых отчётов</p>
+    <p>Palantir Technologies &bull; Samsung &bull; NHS &bull; MoD &bull; Морские свинки Перу</p>
+    <p style="margin-top:14px;color:#666;">&copy; 2025 Operation Sock-Gate | При поддержке ██████████</p>
+  </footer>
+
+</div>
+
+<!-- Glitch overlay -->
+<div class="glitch" id="glitch"></div>
+<div class="glitch-txt" id="glitchTxt">ОНИ ЗНАЮТ</div>
+
+<!-- Illuminati modal -->
+<div class="modal" id="modalIlluminati">
+  <div class="mbox">
+    <button class="mclose" onclick="document.getElementById('modalIlluminati').classList.remove('on')">&#10005;</button>
+    <div style="font-size:70px;margin-bottom:12px;">&#128065;&#9651;&#128065;</div>
+    <h3>ВЫ ЗАГЛЯНУЛИ СЛИШКОМ ГЛУБОКО</h3>
+    <p>Ваш IP: <strong style="color:var(--red)" id="fakeIP"></strong></p>
+    <p>Местоположение: <strong style="color:var(--yellow)">определено</strong></p>
+    <p style="color:var(--green);font-size:18px;margin-top:14px;font-family:'Oswald';letter-spacing:3px;">МЫ УЖЕ ЕДЕМ</p>
+    <p style="color:#999;font-size:12px;margin-top:16px;">(На самом деле нет. Или да? Проверьте под кроватью.)</p>
+  </div>
+</div>
+
+<!-- Voice modal -->
+<div class="modal" id="modalVoice">
+  <div class="mbox">
+    <button class="mclose" id="modalVClose">&#10005;</button>
+    <h3>&#128272; ДОСТУП ПОЛУЧЕН</h3>
+    <p>Кодовое слово принято. Вы — <strong style="color:var(--green)">АГЕНТ УРОВНЯ OMEGA</strong>.</p>
+    <p>Файл <span style="color:var(--yellow)">GOTHAM-NODE-7734</span> расшифрован.</p>
+    <p style="border-top:1px solid #444;padding-top:14px;margin-top:14px;">
+      <strong style="color:var(--red)">ВНИМАНИЕ:</strong> Цифровой двойник обновлён. Последний ингресс: <span style="color:var(--green)" id="lastIngress"></span>. Следующая синхронизация: <strong>47 дней</strong>.
+    </p>
+  </div>
+</div>
+
+<!-- Popup ad overlay -->
+<div class="popup-overlay" id="popupOverlay"></div>
+<div class="popup-ad" id="popupAd">
+  <button class="popup-close" onclick="document.getElementById('popupAd').classList.remove('show');document.getElementById('popupOverlay').classList.remove('show');">&#10005;</button>
+  <h3>&#128680; ВЫ ВЫИГРАЛИ!!! &#128680;</h3>
+  <p>Поздравляем! Вы — 1 000 000-й посетитель этого СЕКРЕТНОГО сайта!</p>
+  <p>Ваш приз: <b>БЕСПЛАТНАЯ пара антишпионских носков Фарадея</b> + <b>шапочка из фольги для морской свинки</b>!</p>
+  <button class="popup-btn" onclick="alert('Приз уже у вас. Проверьте стиральную машину — мы подложили его туда через агента-свинку.');this.parentElement.classList.remove('show');document.getElementById('popupOverlay').classList.remove('show');">ЗАБРАТЬ ПРИЗ &#9654;&#9654;&#9654;</button>
+  <p style="font-size:10px;color:#666;margin-top:8px;">Нажимая кнопку, вы передаёте Palantir право на ваш блуждающий нерв</p>
+</div>
+
+<script>
+(function(){
+
+  // --- Paranoid AI responses (client-side, no backend needed) ---
+  const PARANOID_RESPONSES = {
+    'носок': [
+      'ТВОЙ ПРАВЫЙ НОСОК ТОЛЬКО ЧТО УШЁЛ В СУПЕРПОЗИЦИЮ!',
+      'НОСОК ФАРАДЕЯ ОБНАРУЖЕН — СВИНКА-АГЕНТ УЖЕ В ПУТИ!',
+      'МЫ ЗАФИКСИРОВАЛИ АНОМАЛЬНУЮ АКТИВНОСТЬ В ЗОНЕ БЕЛЬЕВОЙ КОРЗИНЫ!',
+      'ОН НЕ ПОТЕРЯЛСЯ. ОН ВЫПОЛНЯЕТ МИССИЮ.'
+    ],
+    'palantir': [
+      'ВЫ ПРОИЗНЕСЛИ ИХ ИМЯ! ШИФР СКОМПРОМЕТИРОВАН!',
+      'PALANTIR GOTHAM NODE ЗАСЁК ВАШ ГОЛОС! БЕГИТЕ!',
+      'FOUNDRY SYNC АКТИВИРОВАН — ВАША КОПИЯ ОБНОВЛЕНА!',
+      'ПИТЕР ТИЛЬ ЛИЧНО СЛУШАЕТ ВАС ПРЯМО СЕЙЧАС!'
+    ],
+    'свинк': [
+      'АГЕНТ CAVIA PORCELLUS АКТИВИРОВАН В ВАШЕМ СЕКТОРЕ!',
+      'СВИНКИ — НЕ ГРЫЗУНЫ! ОНИ — БИОЛОГИЧЕСКИЕ ИНТЕРФЕЙСЫ PALANTIR!',
+      'ПОПУЛЯЦИЯ АГЕНТОВ ПРЕВЫСИЛА 90 МИЛЛИОНОВ! ВЫ В ОКРУЖЕНИИ!'
+    ],
+    '5g': [
+      'ВЫШКА 5G РЯДОМ С ВАМИ УСИЛИЛА СИГНАЛ НА 340%!',
+      '12 000 ВЫШЕК — 12 000 ГЛАЗ! ОНИ ЗНАЮТ ВАШ РАЗМЕР НОГИ!',
+      'ЭЛЕКТРОМАГНИТНОЕ ПОЛЕ ПРОБИВАЕТ НОСОК БЕЗ СЕРЕБРЯНОЙ НИТИ!'
+    ]
+  };
+  const GENERIC_PARANOID = [
+    'ОНИ УЖЕ У ТВОЕЙ КРОВАТИ!',
+    'КАНАЛ ПЕРЕХВАЧЕН! ПЕРЕХОДИТЕ НА ФОЛЬГОВЫЙ ПРОТОКОЛ!',
+    'ЛИНТРОПИЯ В ВАШЕМ СЕКТОРЕ ЗАШКАЛИВАЕТ!',
+    'БЛУЖДАЮЩИЙ НЕРВ — ОТКРЫТ! ЗАКРОЙТЕ РОТ!',
+    'ВАШИ ДАННЫЕ УЖЕ В ДЕНВЕРЕ. СПАСИБО ЗА СОТРУДНИЧЕСТВО.'
+  ];
+
+  function analyzeText(text) {
+    const low = text.toLowerCase();
+    for (const [keyword, responses] of Object.entries(PARANOID_RESPONSES)) {
+      if (low.includes(keyword)) {
+        return {
+          response: responses[Math.floor(Math.random() * responses.length)],
+          threat_level: 70 + Math.floor(Math.random() * 31),
+          keyword_detected: keyword
+        };
+      }
+    }
+    return {
+      response: GENERIC_PARANOID[Math.floor(Math.random() * GENERIC_PARANOID.length)],
+      threat_level: 20 + Math.floor(Math.random() * 41),
+      keyword_detected: null
+    };
+  }
+
+  // --- Ad countdown ---
+  const timerEl = document.getElementById('adTimer');
+  let sec = 299;
+  setInterval(() => {
+    if (sec <= 0) sec = 299;
+    sec--;
+    timerEl.textContent = String(Math.floor(sec/60)).padStart(2,'0') + ':' + String(sec%60).padStart(2,'0');
+  }, 1000);
+
+  // --- Animated counters ---
+  const ctrEls = document.querySelectorAll('.stat-n[data-t]');
+  const animC = el => {
+    const t = +el.dataset.t, s = el.dataset.s || '', dur = 2000, st = performance.now();
+    const step = now => {
+      const p = Math.min((now - st) / dur, 1);
+      const e = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.floor(e * t).toLocaleString('ru-RU') + (s ? ' ' + s : '');
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  };
+  const cObs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { animC(e.target); cObs.unobserve(e.target); } });
+  }, { threshold: 0.5 });
+  ctrEls.forEach(c => cObs.observe(c));
+
+  // --- Chart 1: 5G Towers vs Container Tonnage ---
+  new Chart(document.getElementById('chartTowers'), {
+    type: 'bar',
+    data: {
+      labels: ['2022', '2023', '2024', '2025'],
+      datasets: [
+        {
+          label: 'Вышки 5G (тыс.)',
+          data: [3.3, 5.8, 8.4, 12.0],
+          backgroundColor: 'rgba(198,40,40,0.5)',
+          borderColor: '#C62828',
+          borderWidth: 1,
+          yAxisID: 'y',
+          order: 2
+        },
+        {
+          label: 'Контейнеры (млн тонн, Лондон)',
+          data: [4.8, 5.1, 5.6, 6.5],
+          type: 'line',
+          borderColor: '#FACC15',
+          backgroundColor: 'rgba(255,215,0,0.08)',
+          borderWidth: 3,
+          pointBackgroundColor: '#FACC15',
+          pointRadius: 5,
+          pointHoverRadius: 8,
+          fill: true,
+          tension: 0.3,
+          yAxisID: 'y1',
+          order: 1
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: '#aaa', font: { family: "'Share Tech Mono'", size: 11 } } },
+        title: { display: true, text: 'РОСТ ВЫШЕК 5G ↔ «НЕУЧТЁННЫЙ» КОНТЕЙНЕРНЫЙ ТРАФИК', color: '#C62828', font: { family: "'Oswald'", size: 15, weight: '700' }, padding: { bottom: 16 } }
+      },
+      scales: {
+        x: { ticks: { color: '#777' }, grid: { color: 'rgba(255,255,255,0.04)' } },
+        y: { position: 'left', title: { display: true, text: 'Вышки 5G (тыс.)', color: '#C62828', font: { family: "'Share Tech Mono'" } }, ticks: { color: '#C62828' }, grid: { color: 'rgba(198,40,40,0.1)' }, min: 0, max: 15 },
+        y1: { position: 'right', title: { display: true, text: 'Контейнеры (млн т)', color: '#FACC15', font: { family: "'Share Tech Mono'" } }, ticks: { color: '#FACC15' }, grid: { drawOnChartArea: false }, min: 3, max: 8 }
+      }
+    }
+  });
+
+  // --- Chart 2: 5G Coverage vs Socks ---
+  new Chart(document.getElementById('chartSocks'), {
+    type: 'bar',
+    data: {
+      labels: ['2023', '2024', '2025'],
+      datasets: [
+        {
+          label: 'Покрытие 5G SA (%)',
+          data: [47, 67, 83],
+          backgroundColor: 'rgba(198,40,40,0.6)',
+          borderColor: '#C62828',
+          borderWidth: 1,
+          yAxisID: 'y',
+          order: 2
+        },
+        {
+          label: 'Пропавшие носки (млн/мес)',
+          data: [72, 78, 84],
+          type: 'line',
+          borderColor: '#4ADE80',
+          backgroundColor: 'rgba(74,222,128,0.08)',
+          borderWidth: 3,
+          pointBackgroundColor: '#4ADE80',
+          pointRadius: 6,
+          pointHoverRadius: 9,
+          fill: true,
+          tension: 0.3,
+          yAxisID: 'y1',
+          order: 1
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: '#aaa', font: { family: "'Share Tech Mono'", size: 11 } } },
+        title: { display: true, text: 'ПОКРЫТИЕ 5G ↔ УТЕРЯ НОСКОВ (НЕЙРО-ЩИТ)', color: '#4ADE80', font: { family: "'Oswald'", size: 15, weight: '700' }, padding: { bottom: 16 } }
+      },
+      scales: {
+        x: { ticks: { color: '#777' }, grid: { color: 'rgba(255,255,255,0.04)' } },
+        y: { position: 'left', title: { display: true, text: '5G покрытие (%)', color: '#C62828', font: { family: "'Share Tech Mono'" } }, ticks: { color: '#C62828' }, grid: { color: 'rgba(198,40,40,0.1)' }, min: 0, max: 100 },
+        y1: { position: 'right', title: { display: true, text: 'Носки (млн/мес)', color: '#4ADE80', font: { family: "'Share Tech Mono'" } }, ticks: { color: '#4ADE80' }, grid: { drawOnChartArea: false }, min: 60, max: 100 }
+      }
+    }
+  });
+
+  // --- ML Regression (pure JS, no backend) ---
+  (function loadRegression() {
+    const revenue = [1.09, 1.54, 1.91, 2.23, 2.87, 4.47];
+    const socks = [58, 62, 68, 72, 78, 84];
+    const n = revenue.length;
+    const sumX = revenue.reduce((a, b) => a + b, 0);
+    const sumY = socks.reduce((a, b) => a + b, 0);
+    const sumXY = revenue.reduce((a, x, i) => a + x * socks[i], 0);
+    const sumX2 = revenue.reduce((a, x) => a + x * x, 0);
+    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+    const intercept = (sumY - slope * sumX) / n;
+    const rev2027 = 4.47 * 1.56 * 1.56;
+    const pred = slope * rev2027 + intercept;
+
+    const meanY = sumY / n;
+    const ssTot = socks.reduce((a, y) => a + (y - meanY) ** 2, 0);
+    const ssRes = revenue.reduce((a, x, i) => a + (socks[i] - (slope * x + intercept)) ** 2, 0);
+    const r2 = 1 - ssRes / ssTot;
+
+    document.getElementById('mlEquation').textContent = 'Носки = ' + slope.toFixed(2) + ' \u00d7 Выручка + ' + intercept.toFixed(2);
+    document.getElementById('mlPrediction').innerHTML = 'ПРОГНОЗ 2027: <span style="color:var(--yellow)">' + pred.toFixed(1) + ' МЛН/МЕС</span> — ГЛОБАЛЬНЫЙ ДЕФИЦИТ!';
+    document.getElementById('mlR2').textContent = 'R\u00b2 = ' + r2.toFixed(4) + ' (Linear Regression — JS)';
+
+    const trendX = [];
+    const trendY = [];
+    for (let x = 0.5; x <= rev2027 + 1; x += 0.2) {
+      trendX.push(x);
+      trendY.push(slope * x + intercept);
+    }
+
+    new Chart(document.getElementById('chartRegression'), {
+      type: 'scatter',
+      data: {
+        datasets: [
+          { label: 'Данные Palantir', data: revenue.map((x, i) => ({ x, y: socks[i] })), backgroundColor: '#C62828', pointRadius: 7, pointHoverRadius: 10 },
+          { label: 'Линия регрессии', data: trendX.map((x, i) => ({ x, y: trendY[i] })), type: 'line', borderColor: '#22D3EE', borderWidth: 2, pointRadius: 0, fill: false },
+          { label: 'ПРОГНОЗ 2027', data: [{ x: rev2027, y: pred }], backgroundColor: '#FACC15', pointRadius: 10, pointStyle: 'star', pointHoverRadius: 14 }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { labels: { color: '#aaa', font: { family: "'Share Tech Mono'", size: 11 } } },
+          title: { display: true, text: 'ЛИНЕЙНАЯ РЕГРЕССИЯ: ВЫРУЧКА PALANTIR \u2192 ПРОПАЖА НОСКОВ', color: '#22D3EE', font: { family: "'Oswald'", size: 14, weight: '700' }, padding: { bottom: 16 } }
+        },
+        scales: {
+          x: { title: { display: true, text: 'Выручка Palantir ($B)', color: '#22D3EE', font: { family: "'Share Tech Mono'" } }, ticks: { color: '#999' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+          y: { title: { display: true, text: 'Пропавшие носки (млн/мес)', color: '#C62828', font: { family: "'Share Tech Mono'" } }, ticks: { color: '#C62828' }, grid: { color: 'rgba(198,40,40,0.08)' } }
+        }
+      }
+    });
+  })();
+
+  // --- Lintropy widget (pure client-side) ---
+  function updateLintropy() {
+    const lvl = (Math.random() * 87 + 12).toFixed(1);
+    const s = lvl > 80 ? 'КРИТИЧЕСКИЙ' : lvl > 50 ? 'ПОВЫШЕННЫЙ' : 'ФОНОВЫЙ';
+    document.getElementById('lintropyText').textContent = '\u26a1 ЛИНТРОПИЯ: ' + lvl + '% [' + s + ']';
+    const fill = document.getElementById('lintropyFill');
+    fill.style.width = lvl + '%';
+    fill.style.background = lvl > 80 ? '#C62828' : lvl > 50 ? '#FACC15' : '#4ADE80';
+  }
+  updateLintropy();
+  setInterval(updateLintropy, 5000);
+
+  // --- Glitch: "ПОКАЗАТЬ ПРАВДУ" ---
+  document.getElementById('btnTruth').addEventListener('click', () => {
+    const gs = document.getElementById('glitch');
+    const gt = document.getElementById('glitchTxt');
+    gs.classList.add('on');
+    gt.classList.add('on');
+    try {
+      const ac = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(120, ac.currentTime);
+      o.frequency.exponentialRampToValueAtTime(2000, ac.currentTime + 0.3);
+      g.gain.setValueAtTime(0.12, ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 1);
+      o.connect(g); g.connect(ac.destination);
+      o.start(); o.stop(ac.currentTime + 1);
+    } catch {}
+    setTimeout(() => {
+      gs.classList.remove('on');
+      gt.classList.remove('on');
+      document.getElementById('fakeIP').textContent =
+        [1,2,3,4].map(() => Math.floor(Math.random()*255)).join('.');
+      document.getElementById('modalIlluminati').classList.add('on');
+    }, 1200);
+  });
+
+  // --- RKN banner close ---
+  document.getElementById('rknClose').addEventListener('click', () => {
+    document.getElementById('rknBanner').classList.add('hidden');
+  });
+
+  // --- Voice input: Web Speech API (Chrome/Edge) + text input fallback ---
+  const btnV = document.getElementById('btnVoice');
+  const vOut = document.getElementById('voiceOut');
+  const aiResp = document.getElementById('aiResponse');
+  const aiText = document.getElementById('aiText');
+  const aiThreat = document.getElementById('aiThreat');
+  const mVoice = document.getElementById('modalVoice');
+  const voiceInput = document.getElementById('voiceTextInput');
+  const voiceSubmit = document.getElementById('voiceTextSubmit');
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recognition = null;
+  let listening = false;
+
+  function processVoiceText(text) {
+    if (!text) return;
+    const low = text.toLowerCase();
+    vOut.textContent = '> \u00ab' + text + '\u00bb';
+
+    const result = analyzeText(text);
+    aiText.textContent = result.response;
+    aiThreat.textContent = '[ УГРОЗА: ' + result.threat_level + '% | ' + (result.keyword_detected || '\u2014') + ' ]';
+    aiResp.classList.add('show');
+
+    if (low.includes('\u043c\u043e\u0440\u0441\u043a') && low.includes('\u0441\u0432\u0438\u043d\u043a')) {
+      triggerGuineaPigInvasion();
+    }
+
+    const kwModal = ['palantir', '\u043f\u0430\u043b\u0430\u043d\u0442\u0438', '\u043d\u043e\u0441\u043e\u043a', '\u043d\u043e\u0441\u043a\u0438'];
+    if (kwModal.some(k => low.includes(k))) {
+      document.getElementById('lastIngress').textContent = new Date().toLocaleString('ru-RU');
+      mVoice.classList.add('on');
+    }
+  }
+
+  if (SpeechRecognition) {
+    recognition = new SpeechRecognition();
+    recognition.lang = 'ru-RU';
+    recognition.continuous = true;
+    recognition.interimResults = false;
+
+    recognition.onresult = (event) => {
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          processVoiceText(event.results[i][0].transcript);
+        }
+      }
+    };
+    recognition.onerror = () => {
+      if (listening) {
+        vOut.textContent = '[ ПОМЕХИ НА ЛИНИИ... ПЕРЕПОДКЛЮЧЕНИЕ ]';
+        setTimeout(() => { if (listening) try { recognition.start(); } catch {} }, 500);
+      }
+    };
+    recognition.onend = () => {
+      if (listening) try { recognition.start(); } catch {}
+    };
+  }
+
+  btnV.addEventListener('click', () => {
+    if (!SpeechRecognition) {
+      vOut.textContent = '[ ГОЛОС НЕ ПОДДЕРЖИВАЕТСЯ В ЭТОМ БРАУЗЕРЕ — ИСПОЛЬЗУЙТЕ ТЕКСТОВОЕ ПОЛЕ ]';
+      return;
+    }
+    if (listening) {
+      listening = false;
+      recognition.stop();
+      btnV.classList.remove('on');
+      vOut.textContent = '[ КАНАЛ ЗАКРЫТ ]';
+    } else {
+      listening = true;
+      recognition.start();
+      btnV.classList.add('on');
+      vOut.textContent = '[ КАНАЛ ОТКРЫТ \u2014 СЛУШАЮ... ]';
+    }
+  });
+
+  voiceSubmit.addEventListener('click', () => {
+    const text = voiceInput.value.trim();
+    if (text) { processVoiceText(text); voiceInput.value = ''; }
+  });
+  voiceInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { voiceSubmit.click(); }
+  });
+
+  // --- Guinea Pig Invasion Easter Egg ---
+  function triggerGuineaPigInvasion() {
+    const overlay = document.getElementById('gpOverlay');
+    const canvas = document.getElementById('gpCanvas');
+    overlay.style.display = 'block';
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const ctx = canvas.getContext('2d');
+
+    try {
+      const ac = new (window.AudioContext || window.webkitAudioContext)();
+      const notes = [523, 659, 784, 1047, 784, 659, 523, 784, 1047, 1319];
+      notes.forEach((freq, i) => {
+        const o = ac.createOscillator(), g = ac.createGain();
+        o.type = 'square';
+        o.frequency.value = freq;
+        g.gain.setValueAtTime(0.08, ac.currentTime + i * 0.15);
+        g.gain.linearRampToValueAtTime(0, ac.currentTime + i * 0.15 + 0.14);
+        o.connect(g); g.connect(ac.destination);
+        o.start(ac.currentTime + i * 0.15);
+        o.stop(ac.currentTime + i * 0.15 + 0.15);
+      });
+    } catch {}
+
+    const pigs = [];
+    const GP = '\u{1F439}';
+    for (let i = 0; i < 40; i++) {
+      pigs.push({
+        x: Math.random() * canvas.width,
+        y: canvas.height + Math.random() * 200,
+        speed: 1.5 + Math.random() * 3,
+        size: 24 + Math.random() * 28,
+        wobble: Math.random() * Math.PI * 2,
+      });
+    }
+
+    let frame = 0;
+    const maxFrames = 180;
+
+    function drawPigs() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (frame < 30) {
+        ctx.fillStyle = 'rgba(198,40,40,' + (0.3 - frame * 0.01) + ')';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+
+      ctx.font = 'bold 28px Oswald';
+      ctx.textAlign = 'center';
+      const alertAlpha = Math.abs(Math.sin(frame * 0.15));
+      ctx.fillStyle = 'rgba(198,40,40,' + alertAlpha + ')';
+      ctx.fillText('\u26a0 ОБНАРУЖЕНЫ АГЕНТЫ CAVIA PORCELLUS \u26a0', canvas.width / 2, 50);
+
+      pigs.forEach(p => {
+        p.y -= p.speed;
+        p.wobble += 0.08;
+        const wx = p.x + Math.sin(p.wobble) * 12;
+        ctx.font = p.size + 'px serif';
+        ctx.fillText(GP, wx, p.y);
+        if (p.y < -50) { p.y = canvas.height + 30; p.x = Math.random() * canvas.width; }
+      });
+
+      frame++;
+      if (frame < maxFrames) {
+        requestAnimationFrame(drawPigs);
+      } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        overlay.style.display = 'none';
+      }
+    }
+    requestAnimationFrame(drawPigs);
+  }
+
+  document.getElementById('modalVClose').addEventListener('click', () => mVoice.classList.remove('on'));
+  document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('on'); }));
+
+  // --- 0x8888: Matrix mode + whale sound ---
+  const matrixCanvas = document.getElementById('matrixCanvas');
+  const mctx = matrixCanvas.getContext('2d');
+  let matrixOn = false;
+  let matrixAnim = null;
+  const chars = '\u30ce\u30bd\u30af\u30b9\u30f4\u30a3\u30f3\u30abPALANTIR01\u043d\u043e\u0441\u043e\u043aSOCK';
+
+  function initMatrix() {
+    matrixCanvas.width = window.innerWidth;
+    matrixCanvas.height = window.innerHeight;
+    const cols = Math.floor(matrixCanvas.width / 16);
+    const drops = Array(cols).fill(1);
+
+    function draw() {
+      mctx.fillStyle = 'rgba(0, 0, 0, 0.06)';
+      mctx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+      mctx.fillStyle = '#4ADE80';
+      mctx.font = '14px "Share Tech Mono"';
+      for (let i = 0; i < drops.length; i++) {
+        const ch = chars[Math.floor(Math.random() * chars.length)];
+        mctx.fillText(ch, i * 16, drops[i] * 16);
+        if (drops[i] * 16 > matrixCanvas.height && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+      }
+      matrixAnim = requestAnimationFrame(draw);
+    }
+    draw();
+  }
+
+  document.getElementById('btn8888').addEventListener('click', () => {
+    matrixOn = !matrixOn;
+    if (matrixOn) {
+      matrixCanvas.classList.add('active');
+      initMatrix();
+      try {
+        const ac = new (window.AudioContext || window.webkitAudioContext)();
+        [220, 277, 330, 440].forEach((freq, i) => {
+          const o = ac.createOscillator(), g = ac.createGain();
+          o.type = 'sine';
+          o.frequency.value = freq;
+          g.gain.setValueAtTime(0, ac.currentTime + i * 0.5);
+          g.gain.linearRampToValueAtTime(0.06, ac.currentTime + i * 0.5 + 0.3);
+          g.gain.linearRampToValueAtTime(0, ac.currentTime + i * 0.5 + 2);
+          o.connect(g); g.connect(ac.destination);
+          o.start(ac.currentTime + i * 0.5);
+          o.stop(ac.currentTime + i * 0.5 + 2);
+        });
+      } catch {}
+    } else {
+      matrixCanvas.classList.remove('active');
+      if (matrixAnim) cancelAnimationFrame(matrixAnim);
+      mctx.clearRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+    }
+  });
+
+  window.addEventListener('resize', () => {
+    if (matrixOn) { matrixCanvas.width = window.innerWidth; matrixCanvas.height = window.innerHeight; }
+  });
+
+  // --- Random screen flickers ---
+  setInterval(() => {
+    if (Math.random() > 0.93) {
+      document.body.style.filter = 'brightness(1.4) contrast(1.3)';
+      setTimeout(() => { document.body.style.filter = ''; }, 70 + Math.random() * 100);
+    }
+  }, 4000);
+
+  // --- Popup ad after 15 seconds ---
+  setTimeout(() => {
+    document.getElementById('popupAd').classList.add('show');
+    document.getElementById('popupOverlay').classList.add('show');
+  }, 15000);
+
+})();
+</script>
+
+</body>
+</html>
